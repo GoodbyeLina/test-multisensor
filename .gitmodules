@@ -1,0 +1,3 @@
+[submodule "components/mpu6050"]
+	path = components/mpu6050
+	url = https://github.com/GoodbyeLina/test_mpu6050.git
