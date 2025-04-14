@@ -1,3 +1,6 @@
 [submodule "components/mpu6050"]
 	path = components/mpu6050
 	url = https://github.com/GoodbyeLina/test_mpu6050.git
+[submodule "components/hc_sr04"]
+	path = components/hc_sr04
+	url = https://github.com/GoodbyeLina/test-HC-SR04.git
