@@ -28,6 +28,7 @@
 #include "pngle.h"
 
 #include "hmc5883l.h"
+#include "cam_ov2640.h"
 
 #include "driver/gpio.h"
 
@@ -49,6 +50,7 @@ static mpu6050_handle_t mpu6050 = NULL;
 #define ST7735  1
 #define SC7A20H 0
 #define HCM5883L 1
+#define ov2640 1
 
 /**
  * @brief i2c master initialization
@@ -1519,8 +1521,9 @@ void app_main(void)
             printf("Measurement failed\n");
         }
 	}
-	
-#elif MPU6050
+#endif
+
+#if MPU6050
     esp_err_t ret_mpu6050;
     uint8_t mpu6050_deviceid;
     mpu6050_acce_value_t acce;
@@ -1557,8 +1560,10 @@ void app_main(void)
     ret_mpu6050 = i2c_driver_delete(I2C_MASTER_NUM);
     TEST_ASSERT_EQUAL(ESP_OK, ret_mpu6050);
 
+#endif
 
-#elif ST7735
+
+#if ST7735
     // Initialize NVS
 	// NVS saves the touch position calibration.
 	ESP_LOGI(TAG, "Initialize NVS");
@@ -1588,7 +1593,9 @@ void app_main(void)
 
 	xTaskCreate(TFT, "TFT", 1024*6, NULL, 2, NULL);
 
-#elif SC7A20H
+#endif
+
+#if SC7A20H
 	    // 初始化I2C和SC7A20H
 		ESP_ERROR_CHECK(sc7a20h_i2c_init(I2C_NUM_0));
     
@@ -1608,8 +1615,10 @@ void app_main(void)
 			}
 			vTaskDelay(pdMS_TO_TICKS(100));
 		}
-	
-#elif HCM5883L
+
+#endif
+
+#if HCM5883L
     // 初始化HMC5883L(使用默认配置)
     if (hmc5883l_init(NULL) != ESP_OK) {
         ESP_LOGE(TAG, "Failed to initialize HMC5883L");
@@ -1630,6 +1639,29 @@ void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 
+#endif
+
+#if ov2640
+	#if ESP_CAMERA_SUPPORTED
+		if(ESP_OK != init_camera()) {
+			return;
+		}
+
+		while (1)
+		{
+			ESP_LOGI(TAG, "Taking picture...");
+			camera_fb_t *pic = esp_camera_fb_get();
+
+			// use pic->buf to access the image
+			ESP_LOGI(TAG, "Picture taken! Its size was: %zu bytes", pic->len);
+			esp_camera_fb_return(pic);
+
+			vTaskDelay(5000 / portTICK_PERIOD_MS);
+		}
+	#else
+		ESP_LOGE(TAG, "Camera support is not available for this chip");
+		return;
+	#endif
 #endif
 
 }

@@ -2,12 +2,13 @@ dependencies:
   ## Required IDF version
   idf:
     version: '>=4.1.0'
-  
+
   # Espressif maintained components
   espressif/mpu6050: ^1.2.0
-  
+
   # Conditional dependency
   espressif/esp_jpeg:
-    version: "^1.0.0"
+    version: ^1.0.0
     rules:
-      - if: "idf_version >=5.0"
+    - if: idf_version >=5.0
+  espressif/esp32-camera: ^2.0.15
