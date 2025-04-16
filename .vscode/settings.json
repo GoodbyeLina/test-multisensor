@@ -10,5 +10,9 @@
     "idf.customExtraVars": {
         "IDF_TARGET": "esp32s3"
     },
-    "idf.portWin": "COM8"
+    "idf.portWin": "COM8",
+    "files.associations": {
+        "freertos.h": "c",
+        "hc_sr04.h": "c"
+    }
 }

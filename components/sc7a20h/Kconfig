@@ -1,0 +1,24 @@
+menu "SC7A20H Configuration"
+
+    config SC7A20H_I2C_SDA_IO
+        int "I2C SDA GPIO number"
+        range 0 48
+        default 41
+        help
+            GPIO number for I2C SDA signal.
+
+    config SC7A20H_I2C_SCL_IO
+        int "I2C SCL GPIO number"
+        range 0 48
+        default 42
+        help
+            GPIO number for I2C SCL signal.
+
+    config SC7A20H_I2C_FREQ_HZ
+        int "I2C clock frequency (Hz)"
+        range 100000 400000
+        default 100000
+        help
+            I2C clock frequency in Hz.
+
+endmenu

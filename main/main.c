@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "hc_sr04.h"
+
 #include "driver/i2c.h"
 #include "mpu6050.h"
 #include "esp_system.h"
@@ -17,12 +17,17 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 
+#include "hc_sr04.h"
+#include "sc7a20h.h"
+
 #include "ili9340.h"
 #include "fontx.h"
 #include "bmpfile.h"
 #include "decode_jpeg.h"
 #include "decode_png.h"
 #include "pngle.h"
+
+#include "hmc5883l.h"
 
 #include "driver/gpio.h"
 
@@ -36,12 +41,14 @@
 #define CALIBRATION_SAMPLES 100
 
 
-static const char *TAG = "mpu6050 test";
+static const char *TAG = "multisensor test";
 static mpu6050_handle_t mpu6050 = NULL;
 
 #define HC_SR04 0
 #define MPU6050 0
 #define ST7735  1
+#define SC7A20H 0
+#define HCM5883L 1
 
 /**
  * @brief i2c master initialization
@@ -1360,11 +1367,11 @@ void TFT(void *pvParameters)
 		IconTest(&dev, file, CONFIG_WIDTH, CONFIG_HEIGHT, CONFIG_WIDTH/2, CONFIG_HEIGHT/2);
 		WAIT;
 
-		if (lcdIsFrameBuffer(&dev) == false) {
-			ScrollTest(&dev, fx16G, CONFIG_WIDTH, CONFIG_HEIGHT);
-			WAIT;
-			ScrollReset(&dev, CONFIG_WIDTH, CONFIG_HEIGHT);
-		}
+		// if (lcdIsFrameBuffer(&dev) == false) {
+		// 	ScrollTest(&dev, fx16G, CONFIG_WIDTH, CONFIG_HEIGHT);
+		// 	WAIT;
+		// 	ScrollReset(&dev, CONFIG_WIDTH, CONFIG_HEIGHT);
+		// }
 
 		if (lcdIsFrameBuffer(&dev) == true) {
 			if (CONFIG_WIDTH >= 240) {
@@ -1581,6 +1588,47 @@ void app_main(void)
 
 	xTaskCreate(TFT, "TFT", 1024*6, NULL, 2, NULL);
 
+#elif SC7A20H
+	    // 初始化I2C和SC7A20H
+		ESP_ERROR_CHECK(sc7a20h_i2c_init(I2C_NUM_0));
+    
+		// 初始化带重试
+		for (int i = 0; i < 3; i++) {
+			esp_err_t err = sc7a20h_init();
+			if (err == ESP_OK) break;
+			ESP_LOGW(TAG, "Init attempt %d failed", i+1);
+			vTaskDelay(pdMS_TO_TICKS(100));
+		}
+		
+		int16_t x, y, z;
+		while (1) {
+			if (sc7a20h_read_accel(&x, &y, &z) == ESP_OK) {
+				ESP_LOGI(TAG, "Accel X:%.2fg Y:%.2fg Z:%.2fg",
+						x * 0.004f, y * 0.004f, z * 0.004f);
+			}
+			vTaskDelay(pdMS_TO_TICKS(100));
+		}
+	
+#elif HCM5883L
+    // 初始化HMC5883L(使用默认配置)
+    if (hmc5883l_init(NULL) != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize HMC5883L");
+        return;
+    }
+    ESP_LOGI(TAG, "HMC5883L initialized successfully");
+
+    hmc5883l_data_t data;
+    
+    while (1) {
+        if (hmc5883l_read(&data) == ESP_OK) {
+            ESP_LOGI(TAG, "X:%.2fG Y:%.2fG Z:%.2fG Heading:%.1f°",
+                    data.x, data.y, data.z, data.heading);
+        } else {
+            ESP_LOGE(TAG, "Failed to read data");
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
 
 #endif
 
