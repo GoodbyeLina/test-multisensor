@@ -18,7 +18,6 @@
 
 #include "hc_sr04.h"
 #include "sc7a20h.h"
-
 #include "hmc5883l.h"
 #include "my_mpu6050.h"
 #include "my_ST7735.h"
@@ -31,8 +30,8 @@
 
 #define CALIBRATION_SAMPLES 100
 
-
-
+static const char *TAG = "main";
+static mpu6050_handle_t my_mpu6050 = NULL;
 
 #define HC_SR04 0
 #define MPU6050 0
@@ -45,12 +44,19 @@
 void app_main(void)
 {
 #if HC_SR04
+
+
     // 初始化HC-SR04、MPU6050
     hc_sr04_config_t config = {
         .trig_pin = GPIO_NUM_15,
         .echo_pin = GPIO_NUM_16
     };
     esp_err_t ret_hcsr04 = hc_sr04_init(&config);
+
+	if (ret_hcsr04 != ESP_OK) {
+        printf("HC-SR04 init failed: %d\n", ret_hcsr04);
+        return;
+    }
 
 	while (1)
 	{
@@ -64,41 +70,34 @@ void app_main(void)
 #endif
 
 #if MPU6050
-    esp_err_t ret_mpu6050;
-    uint8_t mpu6050_deviceid;
-    mpu6050_acce_value_t acce;
-    mpu6050_gyro_value_t gyro;
-    mpu6050_temp_value_t temp;
 
-    if (ret_hcsr04 != ESP_OK) {
-        printf("HC-SR04 init failed: %d\n", ret_hcsr04);
-        return;
-    }
+	esp_err_t ret;
+	uint8_t mpu6050_deviceid;
+	mpu6050_acce_value_t acce;
+	mpu6050_gyro_value_t gyro;
+	mpu6050_temp_value_t temp;
 
-    i2c_sensor_mpu6050_init();
+	i2c_sensor_mpu6050_init();
 
-	while(1) {
-        ret_mpu6050 = mpu6050_get_deviceid(mpu6050, &mpu6050_deviceid);
-        TEST_ASSERT_EQUAL(ESP_OK, ret_mpu6050);
-        TEST_ASSERT_EQUAL_UINT8_MESSAGE(MPU6050_WHO_AM_I_VAL, mpu6050_deviceid, "Who Am I register does not contain expected data");
-    
-        ret_mpu6050 = mpu6050_get_acce(mpu6050, &acce);
-        TEST_ASSERT_EQUAL(ESP_OK, ret_mpu6050);
-        ESP_LOGI(TAG, "acce_x:%.2f, acce_y:%.2f, acce_z:%.2f\n", acce.acce_x, acce.acce_y, acce.acce_z);
-    
-        ret_mpu6050 = mpu6050_get_gyro(mpu6050, &gyro);
-        TEST_ASSERT_EQUAL(ESP_OK, ret_mpu6050);
-        ESP_LOGI(TAG, "gyro_x:%.2f, gyro_y:%.2f, gyro_z:%.2f\n", gyro.gyro_x, gyro.gyro_y, gyro.gyro_z);
-    
-        ret_mpu6050 = mpu6050_get_temp(mpu6050, &temp);
-        TEST_ASSERT_EQUAL(ESP_OK, ret_mpu6050);
-        ESP_LOGI(TAG, "t:%.2f \n", temp.temp);
-    
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    mpu6050_delete(mpu6050);
-    ret_mpu6050 = i2c_driver_delete(I2C_MASTER_NUM);
-    TEST_ASSERT_EQUAL(ESP_OK, ret_mpu6050);
+	ret = mpu6050_get_deviceid(my_mpu6050, &mpu6050_deviceid);
+	TEST_ASSERT_EQUAL(ESP_OK, ret);
+	TEST_ASSERT_EQUAL_UINT8_MESSAGE(MPU6050_WHO_AM_I_VAL, mpu6050_deviceid, "Who Am I register does not contain expected data");
+
+	ret = mpu6050_get_acce(my_mpu6050, &acce);
+	TEST_ASSERT_EQUAL(ESP_OK, ret);
+	ESP_LOGI(TAG, "acce_x:%.2f, acce_y:%.2f, acce_z:%.2f\n", acce.acce_x, acce.acce_y, acce.acce_z);
+
+	ret = mpu6050_get_gyro(my_mpu6050, &gyro);
+	TEST_ASSERT_EQUAL(ESP_OK, ret);
+	ESP_LOGI(TAG, "gyro_x:%.2f, gyro_y:%.2f, gyro_z:%.2f\n", gyro.gyro_x, gyro.gyro_y, gyro.gyro_z);
+
+	ret = mpu6050_get_temp(my_mpu6050, &temp);
+	TEST_ASSERT_EQUAL(ESP_OK, ret);
+	ESP_LOGI(TAG, "t:%.2f \n", temp.temp);
+
+	mpu6050_delete(my_mpu6050);
+	ret = i2c_driver_delete(I2C_MASTER_NUM);
+	TEST_ASSERT_EQUAL(ESP_OK, ret);
 
 #endif
 

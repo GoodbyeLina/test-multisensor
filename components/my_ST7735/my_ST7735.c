@@ -1,30 +1,4 @@
-#include "ili9340.h"
-#include <stdio.h>
-#include <inttypes.h>
-#include <math.h>
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_err.h"
-#include "esp_log.h"
-#include "esp_system.h"
-#include "nvs_flash.h"
-#include "nvs.h"
-#include "esp_vfs.h"
-#include "esp_spiffs.h"
-
-#include "ili9340.h"
-#include "fontx.h"
-#include "bmpfile.h"
-#include "decode_jpeg.h"
-#include "decode_png.h"
-#include "pngle.h"
-
-#include "driver/gpio.h"
-
-
-#define INTERVAL 400
-#define WAIT vTaskDelay(INTERVAL)
+#include "my_ST7735.h"
 
 static const char *TAG = "ST7735";
 TickType_t FillTest(TFT_t * dev, int width, int height) {
@@ -1360,7 +1334,7 @@ void TFT(void *pvParameters)
 	vTaskDelete(NULL);
 }
 
-static void listSPIFFS(char * path) {
+void listSPIFFS(char * path) {
 	DIR* dir = opendir(path);
 	assert(dir != NULL);
 	while (true) {

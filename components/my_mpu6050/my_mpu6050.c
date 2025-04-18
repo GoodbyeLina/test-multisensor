@@ -7,11 +7,12 @@
  #include "my_mpu6050.h"
 
  static const char *TAG = "mpu6050 test";
- 
+ static mpu6050_handle_t my_mpu6050 = NULL;
+
  /**
   * @brief i2c master initialization
   */
- static void i2c_bus_init(void)
+ void i2c_bus_init(void)
  {
      i2c_config_t conf;
      conf.mode = I2C_MODE_MASTER;
@@ -32,18 +33,18 @@
  /**
   * @brief i2c master initialization
   */
- static void i2c_sensor_mpu6050_init(void)
+void i2c_sensor_mpu6050_init(void)
  {
      esp_err_t ret;
  
      i2c_bus_init();
-     mpu6050 = mpu6050_create(I2C_MASTER_NUM, MPU6050_I2C_ADDRESS);
-     TEST_ASSERT_NOT_NULL_MESSAGE(mpu6050, "MPU6050 create returned NULL");
+     my_mpu6050 = mpu6050_create(I2C_MASTER_NUM, MPU6050_I2C_ADDRESS);
+     TEST_ASSERT_NOT_NULL_MESSAGE(my_mpu6050, "MPU6050 create returned NULL");
  
-     ret = mpu6050_config(mpu6050, ACCE_FS_4G, GYRO_FS_500DPS);
+     ret = mpu6050_config(my_mpu6050, ACCE_FS_4G, GYRO_FS_500DPS);
      TEST_ASSERT_EQUAL(ESP_OK, ret);
  
-     ret = mpu6050_wake_up(mpu6050);
+     ret = mpu6050_wake_up(my_mpu6050);
      TEST_ASSERT_EQUAL(ESP_OK, ret);
  }
  
@@ -57,23 +58,23 @@
  
      i2c_sensor_mpu6050_init();
  
-     ret = mpu6050_get_deviceid(mpu6050, &mpu6050_deviceid);
+     ret = mpu6050_get_deviceid(my_mpu6050, &mpu6050_deviceid);
      TEST_ASSERT_EQUAL(ESP_OK, ret);
      TEST_ASSERT_EQUAL_UINT8_MESSAGE(MPU6050_WHO_AM_I_VAL, mpu6050_deviceid, "Who Am I register does not contain expected data");
  
-     ret = mpu6050_get_acce(mpu6050, &acce);
+     ret = mpu6050_get_acce(my_mpu6050, &acce);
      TEST_ASSERT_EQUAL(ESP_OK, ret);
      ESP_LOGI(TAG, "acce_x:%.2f, acce_y:%.2f, acce_z:%.2f\n", acce.acce_x, acce.acce_y, acce.acce_z);
  
-     ret = mpu6050_get_gyro(mpu6050, &gyro);
+     ret = mpu6050_get_gyro(my_mpu6050, &gyro);
      TEST_ASSERT_EQUAL(ESP_OK, ret);
      ESP_LOGI(TAG, "gyro_x:%.2f, gyro_y:%.2f, gyro_z:%.2f\n", gyro.gyro_x, gyro.gyro_y, gyro.gyro_z);
  
-     ret = mpu6050_get_temp(mpu6050, &temp);
+     ret = mpu6050_get_temp(my_mpu6050, &temp);
      TEST_ASSERT_EQUAL(ESP_OK, ret);
      ESP_LOGI(TAG, "t:%.2f \n", temp.temp);
  
-     mpu6050_delete(mpu6050);
+     mpu6050_delete(my_mpu6050);
      ret = i2c_driver_delete(I2C_MASTER_NUM);
      TEST_ASSERT_EQUAL(ESP_OK, ret);
  }
