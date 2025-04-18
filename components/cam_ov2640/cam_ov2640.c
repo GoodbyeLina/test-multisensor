@@ -4,43 +4,38 @@
 
 static const char *TAG = "ov2640-driver";
 
+#if ESP_CAMERA_SUPPORTED
 static camera_config_t camera_config = {
-    
-    // 基本引脚配置
-    .pin_pwdn = OV_2640_PWDN_PIN,
-    .pin_reset = OV_2640_RST_PIN,
-    .pin_xclk = OV_2640_XCLK_PIN,
-    .pin_sccb_sda = OV_2640_I2C_SDA_PIN,
-    .pin_sccb_scl = OV_2640_I2C_SCL_PIN,
-    
-    // 数据引脚配置
-    .pin_d7 = OV_2640_D7_PIN,
-    .pin_d6 = OV_2640_D6_PIN,
-    .pin_d5 = OV_2640_D5_PIN,
-    .pin_d4 = OV_2640_D4_PIN,
-    .pin_d3 = OV_2640_D3_PIN,
-    .pin_d2 = OV_2640_D2_PIN,
-    .pin_d1 = OV_2640_D1_PIN,
-    .pin_d0 = OV_2640_D0_PIN,
+    .pin_pwdn = CAM_PIN_PWDN,
+    .pin_reset = CAM_PIN_RESET,
+    // .pin_xclk = CAM_PIN_XCLK,
+    .pin_sccb_sda = CAM_PIN_SIOD,
+    .pin_sccb_scl = CAM_PIN_SIOC,
 
-    // 控制信号引脚
-    .pin_vsync = OV_2640_VSYNC_PIN,
-    .pin_href = OV_2640_HREF_PIN,
-    .pin_pclk = OV_2640_PCLK_PIN,
-    
-    // XCLK配置
-    .xclk_freq_hz = 20000000, // 20MHz
+    .pin_d7 = CAM_PIN_D7,
+    .pin_d6 = CAM_PIN_D6,
+    .pin_d5 = CAM_PIN_D5,
+    .pin_d4 = CAM_PIN_D4,
+    .pin_d3 = CAM_PIN_D3,
+    .pin_d2 = CAM_PIN_D2,
+    .pin_d1 = CAM_PIN_D1,
+    .pin_d0 = CAM_PIN_D0,
+    .pin_vsync = CAM_PIN_VSYNC,
+    .pin_href = CAM_PIN_HREF,
+    .pin_pclk = CAM_PIN_PCLK,
+
+    //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
+    .xclk_freq_hz = 20000000,
     .ledc_timer = LEDC_TIMER_0,
     .ledc_channel = LEDC_CHANNEL_0,
-    
-    // 图像格式和分辨率（根据PSRAM调整）
-    .pixel_format = PIXFORMAT_JPEG, // 必须使用JPEG格式
-    .frame_size = FRAMESIZE_UXGA,//QQVGA-UXGA, For ESP32, do not use sizes above QVGA when not JPEG. The performance of the ESP32-S series has improved a lot, but JPEG mode always gives better frame rates.
+
+    .pixel_format = PIXFORMAT_RGB565, //YUV422,GRAYSCALE,RGB565,JPEG
+    .frame_size = FRAMESIZE_QVGA,    //QQVGA-UXGA, For ESP32, do not use sizes above QVGA when not JPEG. The performance of the ESP32-S series has improved a lot, but JPEG mode always gives better frame rates.
 
     .jpeg_quality = 12, //0-63, for OV series camera sensors, lower number means higher quality
-    .fb_count = 1, //When jpeg mode is used, if fb_count more than one, the driver will work in continuous mode.
-    .grab_mode = CAMERA_GRAB_WHEN_EMPTY//CAMERA_GRAB_LATEST. Sets when buffers should be filled
-
+    .fb_count = 1,       //When jpeg mode is used, if fb_count more than one, the driver will work in continuous mode.
+    .fb_location = CAMERA_FB_IN_PSRAM,
+    .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
 };
 
 esp_err_t init_camera(void)
@@ -55,4 +50,4 @@ esp_err_t init_camera(void)
 
     return ESP_OK;
 }
-
+#endif
