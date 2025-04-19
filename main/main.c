@@ -37,7 +37,7 @@ static mpu6050_handle_t my_mpu6050 = NULL;
 #define MPU6050 0
 #define ST7735  0
 #define SC7A20H 0
-#define HCM5883L 0
+#define HCM5883L 1
 #define ov2640 0
 
 
@@ -158,12 +158,32 @@ void app_main(void)
 #endif
 
 #if HCM5883L
-    // 初始化HMC5883L(使用默认配置)
-    if (hmc5883l_init(NULL) != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to initialize HMC5883L");
+    // 初始化HMC5883L(使用自定义配置)
+    hmc5883l_config_t hmc_config = {
+        .i2c_port = HMC5883L_DEFAULT_I2C_PORT,
+        .i2c_addr = HMC5883L_DEFAULT_ADDR,
+        .sda_pin = 11,  // 根据实际硬件连接修改
+        .scl_pin = 12,  // 根据实际硬件连接修改
+        .i2c_freq = HMC5883L_DEFAULT_I2C_FREQ
+    };
+
+    // 带重试的初始化
+    esp_err_t hmc_init_ret = ESP_FAIL;
+    for (int i = 0; i < 3; i++) {
+        hmc_init_ret = hmc5883l_init(&hmc_config);
+        if (hmc_init_ret == ESP_OK) {
+            ESP_LOGI(TAG, "HMC5883L initialized successfully (attempt %d)", i+1);
+            break;
+        }
+        ESP_LOGE(TAG, "HMC5883L init attempt %d failed: %s",
+                i+1, esp_err_to_name(hmc_init_ret));
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
+    if (hmc_init_ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize HMC5883L after 3 attempts");
         return;
     }
-    ESP_LOGI(TAG, "HMC5883L initialized successfully");
 
     hmc5883l_data_t data;
     
