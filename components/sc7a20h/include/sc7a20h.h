@@ -5,8 +5,18 @@
 #include "esp_err.h"
 #include "sdkconfig.h"
 
-#define SC7A20H_ADDR 0x32
-#define SC7A20H_READ_ADDR 0x33
+#define SC7A20H_ADDR        0x18
+// #define SC7A20H_READ_ADDR   0x33
+// #define SC7A20H_WRITE_ADDR  0x32
+
+// 传感器配置结构体
+typedef struct {
+    i2c_port_t i2c_port;      // I2C端口号
+    uint8_t i2c_addr;         // I2C地址
+    int sda_pin;              // SDA引脚
+    int scl_pin;              // SCL引脚
+    uint32_t i2c_freq;        // I2C频率
+} sc7a20h_config_t;
 
 /**
  * @brief 初始化SC7A20H I2C接口

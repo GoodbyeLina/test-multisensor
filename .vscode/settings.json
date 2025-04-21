@@ -14,6 +14,7 @@
     "files.associations": {
         "freertos.h": "c",
         "hc_sr04.h": "c",
-        "my_st7735.h": "c"
+        "my_st7735.h": "c",
+        "sc7a20h.h": "c"
     }
 }
